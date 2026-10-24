@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>J15 兒童遊戲助手 — Monopoly 香港版</title>
+<title>J15 Monopoly 香港版記帳器</title>
 <style>
 :root{
   --bg:#0f1115; --card:#1a1d24; --card2:#222630; --border:#2e3340;
   --txt:#e8eaed; --dim:#8b90a0; --accent:#f0b429; --green:#22c55e; --red:#ef4444; --blue:#3b82f6;
-  --brown:#8b5a2b; --lightblue:#7dd3fc; --pink:#f472b6; --orange:#fb923c; --red2:#ef4444;
-  --yellow:#facc15; --green2:#4ade80; --darkgreen:#059669; --darkblue:#3b82f6;
+  --brown:#8b5a2b; --lightblue:#7dd3fc; --pink:#f472b6; --orange:#fb923c;
+  --yellow:#facc15; --green2:#4ade80; --darkblue:#3b82f6;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;font-size:15px;padding-bottom:80px}
@@ -31,9 +31,14 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .pcard .pbal.neg{color:var(--red)}
 .pcard .pprops{font-size:11px;color:var(--dim);margin-top:4px}
 
-.add-player{background:var(--card);border-radius:12px;padding:12px;display:flex;gap:8px;margin-bottom:16px}
-.add-player input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--txt);font-size:14px}
-.add-player button{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer}
+.add-player{background:var(--card);border-radius:12px;padding:12px;margin-bottom:16px}
+.add-player h4{font-size:13px;color:var(--dim);margin-bottom:8px}
+.preset-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.pchip{padding:6px 14px;border-radius:20px;background:var(--card2);border:2px solid var(--border);cursor:pointer;font-size:13px;transition:.2s}
+.pchip.sel{border-color:var(--accent);background:rgba(240,180,41,.15);color:var(--accent)}
+.custom-row{display:flex;gap:8px}
+.custom-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--txt);font-size:14px}
+.custom-row button{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer}
 
 .txn-form{background:var(--card);border-radius:12px;padding:14px;margin-bottom:16px}
 .txn-form h3{font-size:14px;margin-bottom:10px;color:var(--accent)}
@@ -43,20 +48,22 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .txn-row input[type=number]{text-align:right}
 .txn-submit{width:100%;background:var(--green);color:#000;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
 .txn-type-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
-.ttype{flex:1;min-width:70px;text-align:center;padding:8px 4px;border-radius:8px;background:var(--card2);cursor:pointer;font-size:12px;border:2px solid transparent}
+.ttype{flex:1;min-width:60px;text-align:center;padding:8px 4px;border-radius:8px;background:var(--card2);cursor:pointer;font-size:12px;border:2px solid transparent}
 .ttype.active{border-color:var(--accent);background:rgba(240,180,41,.15)}
 
 .prop-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.prop{background:var(--card);border-radius:10px;padding:10px;border-top:4px solid var(--border);position:relative}
+.prop{background:var(--card);border-radius:10px;padding:10px;border-top:4px solid var(--border);position:relative;cursor:pointer;transition:.15s}
+.prop:active{transform:scale(.97)}
 .prop .pname{font-size:13px;font-weight:600}
 .prop .pprice{font-size:11px;color:var(--dim)}
 .prop .powner{font-size:11px;margin-top:4px;font-weight:600}
 .prop .phouses{font-size:12px;margin-top:2px}
-.prop.noprop{opacity:.4}
-.prop.station{border-top-color:#9ca3af}
-.prop.utility{border-top-color:#a78bfa}
-.prop.special{border-top-color:#6b7280;text-align:center}
-.prop.special .pname{font-size:12px;color:var(--dim)}
+.prop.noprop{opacity:.5}
+.prop.special{text-align:center;border-top-color:#6b7280}
+.prop.special .pname{font-size:12px;color:var(--accent)}
+.prop.tax{border-top-color:var(--red)}
+.prop.go{border-top-color:var(--green)}
+.prop.jail{border-top-color:var(--blue)}
 
 .ledger{background:var(--card);border-radius:12px;padding:4px 0}
 .ledger-item{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px}
@@ -69,31 +76,45 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .toolbar button{background:var(--card2);border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer}
 .toolbar button.danger{border-color:var(--red);color:var(--red)}
+.toolbar button.cloud{border-color:var(--blue);color:var(--blue)}
 
 .section-title{font-size:13px;color:var(--dim);margin:16px 0 8px;text-transform:uppercase;letter-spacing:1px}
 .empty{text-align:center;color:var(--dim);padding:30px;font-size:14px}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);border-radius:16px;padding:20px;max-width:400px;width:100%;max-height:80vh;overflow-y:auto}
+.modal h3{font-size:16px;margin-bottom:12px;color:var(--accent)}
+.modal select,.modal textarea,.modal input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--txt);font-size:14px;margin-bottom:10px}
+.modal textarea{min-height:120px;font-family:monospace;font-size:11px}
+.modal .mbtns{display:flex;gap:8px}
+.modal .mbtns button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:600;cursor:pointer}
+.modal .mok{background:var(--green);color:#000}
+.modal .mcancel{background:var(--card2);color:var(--txt)}
 </style>
 </head>
 <body>
 
 <div class="header">
   <h1>J15 <span>Monopoly HK</span></h1>
-  <div>
-    <span class="ver" id="ver">v1.00</span>
-  </div>
+  <span class="ver" id="ver">v1.21</span>
 </div>
 
 <div class="page active" id="page-players">
   <div class="toolbar">
-    <button onclick="exportJSON()">📤 匯出 JSON</button>
-    <button onclick="document.getElementById('importFile').click()">📥 匯入 JSON</button>
-    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="cloud" onclick="cloudSave()">☁️ 上傳雲端</button>
+    <button class="cloud" onclick="cloudLoad()">☁️ 雲端匯入</button>
     <button class="danger" onclick="resetGame()">🗑 重開</button>
   </div>
 
-  <div class="add-player">
-    <input type="text" id="newPlayerName" placeholder="玩家名稱（如：Cici）" maxlength="12">
-    <button onclick="addPlayer()">+ 加入</button>
+  <div class="add-player" id="setupPanel">
+    <h4>選擇玩家（從名單揀）</h4>
+    <div class="preset-row" id="presetRow"></div>
+    <div class="custom-row">
+      <input type="text" id="newPlayerName" placeholder="自訂玩家名" maxlength="12">
+      <button onclick="addCustomPlayer()">+ 加入</button>
+    </div>
+    <button class="txn-submit" style="margin-top:10px" onclick="startGame()">🎲 開始遊戲</button>
   </div>
 
   <div class="player-grid" id="playerGrid"></div>
@@ -111,7 +132,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
       <select id="txnPlayer"></select>
     </div>
     <div class="txn-row" id="txnTargetRow" style="display:none">
-      <label>對手</label>
+      <label>租出方</label>
       <select id="txnTarget"></select>
     </div>
     <div class="txn-row">
@@ -124,82 +145,147 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
     </div>
     <button class="txn-submit" onclick="addTransaction()">確認入帳</button>
   </div>
-
-  <div class="section-title">📋 流水帳</div>
-  <div class="ledger" id="ledger"></div>
 </div>
 
 <div class="page" id="page-props">
-  <div class="section-title">香港地產（點擊快速買/建屋）</div>
+  <div class="section-title">🗺️ 棋盤（點擊觸發）</div>
   <div id="propList"></div>
 </div>
 
 <div class="page" id="page-ledger">
-  <div class="section-title">完整交易記錄</div>
+  <div class="section-title">📜 完整流水帳</div>
   <div class="ledger" id="ledgerFull"></div>
 </div>
 
 <div class="tabs">
   <div class="tab active" data-page="players" onclick="switchTab(this)"><span class="ico">👥</span>玩家</div>
-  <div class="tab" data-page="props" onclick="switchTab(this)"><span class="ico">🗺️</span>地產</div>
+  <div class="tab" data-page="props" onclick="switchTab(this)"><span class="ico">🗺️</span>棋盤</div>
   <div class="tab" data-page="ledger" onclick="switchTab(this)"><span class="ico">📜</span>帳本</div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3 id="modalTitle"></h3>
+    <div id="modalBody"></div>
+    <div class="mbtns">
+      <button class="mcancel" onclick="closeModal()">取消</button>
+      <button class="mok" id="modalOk" onclick="modalConfirm()">確認</button>
+    </div>
+  </div>
 </div>
 
 <script>
 const BOARD = [
-  {id:0, name:"GO", cn:"出發", type:"special", price:0},
-  {id:1, name:"Wan Chai", cn:"灣仔", type:"prop", price:60, color:"brown"},
-  {id:2, name:"Community Chest", cn:"公益福利", type:"special", price:0},
-  {id:3, name:"Mong Kok", cn:"旺角", type:"prop", price:60, color:"brown"},
-  {id:4, name:"Income Tax", cn:"入息稅", type:"special", price:200},
+  {id:0, name:"GO", cn:"出發", type:"special", price:0, action:"go"},
+  {id:1, name:"Tin Shui Wai", cn:"天水圍", type:"prop", price:60, color:"brown"},
+  {id:2, name:"Community Chest", cn:"公益福利", type:"special", price:0, action:"cc"},
+  {id:3, name:"Cheung Chau", cn:"長洲", type:"prop", price:60, color:"brown"},
+  {id:4, name:"Income Tax", cn:"入息稅", type:"special", price:200, action:"tax"},
   {id:5, name:"Tung Chung Station", cn:"東涌站", type:"station", price:200},
-  {id:6, name:"Tsuen Wan", cn:"荃灣", type:"prop", price:100, color:"lightblue"},
-  {id:7, name:"Chance", cn:"機會", type:"special", price:0},
-  {id:8, name:"Yuen Long", cn:"元朗", type:"prop", price:100, color:"lightblue"},
-  {id:9, name:"Cheung Chau", cn:"長洲", type:"prop", price:120, color:"lightblue"},
-  {id:10, name:"Jail", cn:"監獄", type:"special", price:0},
-  {id:11, name:"Sai Kung", cn:"西貢", type:"prop", price:140, color:"pink"},
+  {id:6, name:"Ap Lei Chau", cn:"鴨俐洲", type:"prop", price:100, color:"lightblue"},
+  {id:7, name:"Chance", cn:"機會", type:"special", price:0, action:"chance"},
+  {id:8, name:"Kwun Tong", cn:"觀塘", type:"prop", price:100, color:"lightblue"},
+  {id:9, name:"Lam Tin", cn:"藍田", type:"prop", price:120, color:"lightblue"},
+  {id:10, name:"Jail", cn:"監獄", type:"special", price:0, action:"jail"},
+  {id:11, name:"Tuen Mun", cn:"屯門", type:"prop", price:140, color:"pink"},
   {id:12, name:"HK Electric", cn:"電燈公司", type:"utility", price:150},
-  {id:13, name:"Lamma Island", cn:"南丫島", type:"prop", price:140, color:"pink"},
-  {id:14, name:"Discovery Bay", cn:"愉景灣", type:"prop", price:160, color:"pink"},
-  {id:15, name:"Kowloon Station", cn:"九龍站", type:"station", price:200},
-  {id:16, name:"Blue Pool Road", cn:"藍塘道", type:"prop", price:180, color:"orange"},
-  {id:17, name:"Community Chest", cn:"公益福利", type:"special", price:0},
-  {id:18, name:"Wong Nai Chung Road", cn:"黃泥涌道", type:"prop", price:180, color:"orange"},
-  {id:19, name:"Village Road", cn:"村道", type:"prop", price:200, color:"orange"},
-  {id:20, name:"Free Parking", cn:"免費泊車", type:"special", price:0},
-  {id:21, name:"Chatham Road", cn:"漆咸道", type:"prop", price:220, color:"red2"},
-  {id:22, name:"Chance", cn:"機會", type:"special", price:0},
-  {id:23, name:"Mody Road", cn:"麼地道", type:"prop", price:220, color:"red2"},
+  {id:13, name:"Yuen Long", cn:"元朗", type:"prop", price:140, color:"pink"},
+  {id:14, name:"Taipo", cn:"大埔", type:"prop", price:160, color:"pink"},
+  {id:15, name:"Tsing Yi Station", cn:"青衣站", type:"station", price:200},
+  {id:16, name:"Tai Wai", cn:"大圍", type:"prop", price:180, color:"orange"},
+  {id:17, name:"Community Chest", cn:"公益福利", type:"special", price:0, action:"cc"},
+  {id:18, name:"Sha Tin", cn:"沙田", type:"prop", price:180, color:"orange"},
+  {id:19, name:"Ma On Shan", cn:"馬鞍山", type:"prop", price:200, color:"orange"},
+  {id:20, name:"Free Parking", cn:"免費泊車", type:"special", price:0, action:"free"},
+  {id:21, name:"Tseung Kwan O", cn:"將軍澳", type:"prop", price:220, color:"red2"},
+  {id:22, name:"Chance", cn:"機會", type:"special", price:0, action:"chance"},
+  {id:23, name:"Tsuen Wan", cn:"荃灣", type:"prop", price:220, color:"red2"},
   {id:24, name:"Aberdeen", cn:"香港仔", type:"prop", price:240, color:"red2"},
-  {id:25, name:"Airport Station", cn:"機場站", type:"station", price:200},
-  {id:26, name:"Connaught Road", cn:"干諾道中", type:"prop", price:260, color:"yellow"},
-  {id:27, name:"Queen's Road", cn:"皇后大道中", type:"prop", price:260, color:"yellow"},
+  {id:25, name:"Kowloon Station", cn:"九龍站", type:"station", price:200},
+  {id:26, name:"Mong Kok", cn:"旺角", type:"prop", price:260, color:"yellow"},
+  {id:27, name:"Tsim Sha Tsui", cn:"尖沙咀", type:"prop", price:260, color:"yellow"},
   {id:28, name:"Water Works", cn:"水務局", type:"utility", price:150},
-  {id:29, name:"Des Voeux Road", cn:"德輔道中", type:"prop", price:280, color:"yellow"},
-  {id:30, name:"Go To Jail", cn:"進入監獄", type:"special", price:0},
-  {id:31, name:"HKCEC", cn:"會展", type:"prop", price:300, color:"green2"},
-  {id:32, name:"Pacific Place", cn:"太古廣場", type:"prop", price:300, color:"green2"},
-  {id:33, name:"Community Chest", cn:"公益福利", type:"special", price:0},
-  {id:34, name:"Exchange Square", cn:"交易廣場", type:"prop", price:320, color:"darkgreen"},
+  {id:29, name:"West Kowloon", cn:"西九龍", type:"prop", price:280, color:"yellow"},
+  {id:30, name:"Go To Jail", cn:"入獄", type:"special", price:0, action:"gotojail"},
+  {id:31, name:"Causeway Bay", cn:"銅鑼灣", type:"prop", price:300, color:"green2"},
+  {id:32, name:"Wan Chai", cn:"灣仔", type:"prop", price:300, color:"green2"},
+  {id:33, name:"Community Chest", cn:"公益福利", type:"special", price:0, action:"cc"},
+  {id:34, name:"Central", cn:"中環", type:"prop", price:320, color:"green2"},
   {id:35, name:"Hong Kong Station", cn:"香港站", type:"station", price:200},
-  {id:36, name:"Chance", cn:"機會", type:"special", price:0},
-  {id:37, name:"Repulse Bay", cn:"淺水灣", type:"prop", price:350, color:"darkblue"},
-  {id:38, name:"Luxury Tax", cn:"巨額稅款", type:"special", price:100},
+  {id:36, name:"Chance", cn:"機會", type:"special", price:0, action:"chance"},
+  {id:37, name:"Pok Fu Lam", cn:"薄扶林", type:"prop", price:350, color:"darkblue"},
+  {id:38, name:"Super Tax", cn:"巨額稅款", type:"special", price:100, action:"tax"},
   {id:39, name:"The Peak", cn:"太平山", type:"prop", price:400, color:"darkblue"},
 ];
 
 const COLOR_HEX = {
   brown:"#8b5a2b", lightblue:"#7dd3fc", pink:"#f472b6", orange:"#fb923c",
-  red2:"#ef4444", yellow:"#facc15", green2:"#4ade80", darkgreen:"#059669", darkblue:"#3b82f6"
+  red2:"#ef4444", yellow:"#facc15", green2:"#4ade80", darkblue:"#3b82f6"
 };
 
+// Cards: deck=cc(公益福利) or chance(機會)
+// amt: fixed amount (positive=收, negative=付), null=要手動輸入
+// settle: "bank" = 同銀行, "all" = 向所有其他玩家收/付
+const CC_CARDS = [
+  {name:"前進到GO", amt:2000},
+  {name:"免費出獄卡", amt:0},
+  {name:"直入監獄", amt:0},
+  {name:"銀行計算錯誤", amt:2000},
+  {name:"人壽保險到期", amt:1000},
+  {name:"繼承遺產", amt:1000},
+  {name:"股票售出獲利", amt:450},
+  {name:"收到顧問費", amt:250},
+  {name:"退稅", amt:200},
+  {name:"選美獲獎", amt:100},
+  {name:"基金收益", amt:100},
+  {name:"生日(向每人收$100)", amt:null, settle:"collect_all", per:100},
+  {name:"支付醫院費", amt:-1000},
+  {name:"支付醫生診金", amt:-500},
+  {name:"支付學費", amt:-500},
+  {name:"街道維修費(每屋$400/酒店$1150)", amt:null},
+];
+const CHANCE_CARDS = [
+  {name:"前進到GO", amt:2000},
+  {name:"免費出獄卡", amt:0},
+  {name:"直入監獄", amt:0},
+  {name:"前進到太平山", amt:0},
+  {name:"前進到尖沙咀", amt:0},
+  {name:"前進到最近車站", amt:0},
+  {name:"前進到最近公用事業", amt:0},
+  {name:"前進到渡輪碼頭", amt:0},
+  {name:"後退三格", amt:0},
+  {name:"銀行派息", amt:1500},
+  {name:"股票派息", amt:500},
+  {name:"繳交保險/汽車維修", amt:-500},
+  {name:"繳交學費", amt:-1500},
+  {name:"繳交超速罰款", amt:-150},
+  {name:"董事酬金(向每人付$50)", amt:null, settle:"pay_all", per:50},
+  {name:"房屋維修(每屋$250/酒店$1000)", amt:null},
+];
+
+// Rent table: [0 houses, 1h, 2h, 3h, 4h, hotel]
+const RENT_TABLE = {
+  brown:    [2, 10, 30, 90, 160, 250],
+  lightblue:[6, 30, 90, 270, 400, 550],
+  pink:     [10, 50, 150, 450, 625, 750],
+  orange:   [14, 70, 200, 550, 750, 950],
+  red2:     [18, 90, 250, 700, 875, 1050],
+  yellow:   [22, 110, 330, 800, 975, 1150],
+  green2:   [26, 130, 390, 900, 1100, 1275],
+  darkblue: [35, 175, 500, 1100, 1300, 1500],
+};
+// Stations: rent by count owned
+const STATION_RENT = [0, 25, 50, 100, 200];
+const MORTGAGE_RATIO = 0.5;  // mortgage = price * 0.5
+const REDEEM_INTEREST = 1.1; // redeem = mortgage * 1.1
+const PRESET_PLAYERS = ["Harry","Dyna","Cici","Coco"];
 const PLAYER_COLORS = ["#ef4444","#3b82f6","#22c55e","#facc15","#a78bfa","#f472b6"];
 const START_MONEY = 1500;
 
 let state = {
-  version: "1.00",
-  lastUpdate: new Date().toISOString().slice(0,10),
+  version: "1.20",
+  started: false,
+  gameId: null,
   startMoney: START_MONEY,
   players: [],
   props: {},
@@ -209,46 +295,67 @@ let state = {
 
 BOARD.forEach(p => {
   if(p.type==="prop"||p.type==="station"||p.type==="utility"){
-    state.props[p.id] = {owner:null, houses:0, hotel:false, mortgaged:false};
+    state.props[p.id] = {owner:null, houses:0, hotel:false};
   }
 });
 
 let currentTxnType = "buy";
+let selectedPreset = new Set();
 
 function load(){
   const saved = localStorage.getItem("j15monopoly");
   if(saved){
     try{ state = JSON.parse(saved); }catch(e){ console.warn(e); }
   }
+  renderPresets();
   render();
 }
-function save(){
-  localStorage.setItem("j15monopoly", JSON.stringify(state));
+function save(){ localStorage.setItem("j15monopoly", JSON.stringify(state)); }
+
+function renderPresets(){
+  const row = document.getElementById("presetRow");
+  row.innerHTML = PRESET_PLAYERS.map(name =>
+    '<div class="pchip'+(selectedPreset.has(name)?' sel':'')+'" onclick="togglePreset(this,\''+name+'\')">'+name+'</div>'
+  ).join("");
+}
+function togglePreset(el, name){
+  if(selectedPreset.has(name)){ selectedPreset.delete(name); el.classList.remove("sel"); }
+  else { selectedPreset.add(name); el.classList.add("sel"); }
 }
 
-function addPlayer(){
+function addCustomPlayer(){
   const name = document.getElementById("newPlayerName").value.trim();
   if(!name) return;
-  state.players.push({
-    id: "p"+state.nextPlayerId++,
-    name: name,
-    balance: START_MONEY,
-    color: PLAYER_COLORS[(state.players.length)%PLAYER_COLORS.length]
-  });
+  selectedPreset.add(name);
   document.getElementById("newPlayerName").value = "";
+  renderPresets();
+}
+
+function startGame(){
+  if(selectedPreset.size===0){ alert("請至少選擇一位玩家"); return; }
+  state.players = Array.from(selectedPreset).map((name,i)=>({
+    id:"p"+(i+1), name:name, balance:START_MONEY, color:PLAYER_COLORS[i%PLAYER_COLORS.length]
+  }));
+  state.started = true;
   save(); render();
 }
 
 function getPlayer(id){ return state.players.find(p=>p.id===id); }
-function playerPropCount(pid){
-  return Object.values(state.props).filter(pr=>pr.owner===pid).length;
-}
+function playerPropCount(pid){ return Object.values(state.props).filter(pr=>pr.owner===pid).length; }
 
 function setTxnType(el){
   document.querySelectorAll(".ttype").forEach(t=>t.classList.remove("active"));
   el.classList.add("active");
   currentTxnType = el.dataset.type;
   document.getElementById("txnTargetRow").style.display = (currentTxnType==="rent") ? "flex" : "none";
+}
+
+function logTxn(pid, signedAmt, type, note){
+  const player = getPlayer(pid);
+  state.ledger.push({
+    t: new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),
+    pid, pname: player.name, type, amt: signedAmt, note
+  });
 }
 
 function addTransaction(){
@@ -258,91 +365,337 @@ function addTransaction(){
   if(!pid || amount===0) return;
   const player = getPlayer(pid);
   let signedAmt = amount;
-
-  if(currentTxnType==="buy" || currentTxnType==="house"){
-    signedAmt = -Math.abs(amount);
-  } else if(currentTxnType==="rent"){
+  if(currentTxnType==="buy" || currentTxnType==="house") signedAmt = -Math.abs(amount);
+  if(currentTxnType==="rent"){
     const tid = document.getElementById("txnTarget").value;
     const target = getPlayer(tid);
     signedAmt = -Math.abs(amount);
     target.balance += Math.abs(amount);
-    state.ledger.push({
-      time: new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),
-      playerId: tid, playerName: target.name, type:"rent-in",
-      amount: Math.abs(amount), note: note||"收租"
-    });
+    logTxn(tid, Math.abs(amount), "rent", note||"收租 from "+player.name);
   }
   player.balance += signedAmt;
-  state.ledger.push({
-    time: new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),
-    playerId: pid, playerName: player.name, type: currentTxnType,
-    amount: signedAmt, note: note
-  });
+  logTxn(pid, signedAmt, currentTxnType, note);
   document.getElementById("txnAmount").value = "0";
   document.getElementById("txnNote").value = "";
   save(); render();
 }
 
+function pickPlayer(title, cb){
+  showModal(title,
+    '<select id="modalPlayer">'+state.players.map(p=>'<option value="'+p.id+'">'+p.name+' ($'+p.balance+')</option>').join("")+'</select>',
+    ()=>{ cb(document.getElementById("modalPlayer").value); }
+  );
+}
+
+function propClick(pid){
+  const p = BOARD[pid];
+  if(!state.started || state.players.length===0){ alert("請先開始遊戲"); return; }
+
+  // Special spaces with actions
+  if(p.action==="tax"){
+    pickPlayer(p.cn+" 扣 $"+p.price, (pid)=>{
+      const pl = getPlayer(pid);
+      pl.balance -= p.price;
+      logTxn(pid, -p.price, "tax", p.cn);
+      save(); render();
+    });
+    return;
+  }
+  if(p.action==="go"){
+    pickPlayer("經過 GO 收 $200", (pid)=>{
+      const pl = getPlayer(pid);
+      pl.balance += 200;
+      logTxn(pid, 200, "go", "經過GO");
+      save(); render();
+    });
+    return;
+  }
+  if(p.action==="gotojail"){
+    pickPlayer("入獄 — "+p.cn, (pid)=>{
+      logTxn(pid, 0, "jail", "入獄");
+      save(); render();
+    });
+    return;
+  }
+  if(p.action==="jail"){
+    pickPlayer("監獄 — 邊位玩家？", (pid)=>{
+      const choice = confirm(p.cn+"\n\n確定出監？扣 $50 保釋金\n\n（Cancel = 淨係探監/出獄卡）");
+      if(choice){
+        const pl = getPlayer(pid);
+        pl.balance -= 50;
+        logTxn(pid, -50, "jail", "出監保釋金 $50");
+      } else {
+        logTxn(pid, 0, "jail", "到監獄（探監/出獄卡）");
+      }
+      save(); render();
+    });
+    return;
+  }
+  if(p.action==="free"){
+    pickPlayer("免費泊車 — 收銀行利息？", (pid)=>{
+      const amt = prompt("收幾多？（入0跳過）");
+      if(amt && parseFloat(amt)!==0){
+        const pl = getPlayer(pid);
+        pl.balance += parseFloat(amt);
+        logTxn(pid, parseFloat(amt), "free", "免費泊車");
+      }
+      save(); render();
+    });
+    return;
+  }
+  if(p.action==="cc" || p.action==="chance"){
+    const deck = p.action==="cc" ? CC_CARDS : CHANCE_CARDS;
+    const deckName = p.action==="cc" ? "公益福利卡" : "機會卡";
+    pickPlayer("抽中"+deckName+" — 邊位玩家？", (pid)=>{
+      let html = '<select id="modalCard" style="margin-bottom:8px">'+
+        deck.map((c,i)=>'<option value="'+i+'">'+c.name+(c.amt!==null?(c.amt>0?' +$'+c.amt:' -$'+Math.abs(c.amt)):'')+'</option>').join("")+
+        '</select>';
+      showModal("🎴 "+deckName, html, ()=>{
+        const ci = parseInt(document.getElementById("modalCard").value);
+        const card = deck[ci];
+        const player = getPlayer(pid);
+        if(card.amt===null && card.settle==="collect_all"){
+          state.players.forEach(o=>{
+            if(o.id!==pid){
+              o.balance -= card.per;
+              logTxn(o.id, -card.per, "card", card.name+" → "+player.name);
+            }
+          });
+          player.balance += card.per*(state.players.length-1);
+          logTxn(pid, card.per*(state.players.length-1), "card", card.name);
+        } else if(card.amt===null && card.settle==="pay_all"){
+          state.players.forEach(o=>{
+            if(o.id!==pid){
+              o.balance += card.per;
+              logTxn(o.id, card.per, "card", card.name+" ← "+player.name);
+            }
+          });
+          player.balance -= card.per*(state.players.length-1);
+          logTxn(pid, -card.per*(state.players.length-1), "card", card.name);
+        } else if(card.amt===null){
+          const amt = prompt(card.name+" — 手動輸入金額（正=收, 負=付）：");
+          if(amt && parseFloat(amt)!==0){
+            player.balance += parseFloat(amt);
+            logTxn(pid, parseFloat(amt), "card", card.name);
+          }
+        } else if(card.amt!==0){
+          player.balance += card.amt;
+          logTxn(pid, card.amt, "card", card.name);
+        } else {
+          logTxn(pid, 0, "card", card.name);
+        }
+        save(); render();
+      });
+    });
+    return;
+  }
+
+  // Properties
+  const pr = state.props[pid];
+  if(pr.owner){ showPropActions(pid); }
+  else { buyProperty(pid); }
+}
+
+function countOwnedColorGroup(pid){
+  const p = BOARD[pid];
+  if(!p.color) return 0;
+  return Object.entries(state.props).filter(([id,pr])=>BOARD[id].color===p.color && pr.owner===state.props[pid].owner).length;
+}
+function countOwnedStations(ownerId){
+  return Object.values(state.props).filter(pr=>pr.owner===ownerId && BOARD.find(b=>b.id===Object.keys(state.props).find(k=>state.props[k]===pr))?.type==="station").length;
+}
+function calcRent(pid){
+  const p = BOARD[pid];
+  const pr = state.props[pid];
+  if(p.type==="station"){
+    const owner = getPlayer(pr.owner);
+    const cnt = Object.entries(state.props).filter(([id,pr2])=>pr2.owner===owner.id && BOARD[id].type==="station").length;
+    return STATION_RENT[Math.min(cnt,4)];
+  }
+  if(p.type==="utility"){
+    return -1; // special: needs dice
+  }
+  const rents = RENT_TABLE[p.color] || [10];
+  let idx = pr.hotel ? 5 : pr.houses;
+  let rent = rents[idx] || rents[0];
+  // color set bonus: double base rent if all owned
+  if(idx===0 && countOwnedColorGroup(pid)===BOARD.filter(b=>b.color===p.color).length) rent *= 2;
+  return rent;
+}
+
+function showPropActions(pid){
+  const p = BOARD[pid];
+  const pr = state.props[pid];
+  const owner = getPlayer(pr.owner);
+  const hcost = Math.floor(p.price/2);
+  const rent = calcRent(pid);
+  const canBuild = (p.type==="prop");
+  let houseLabel = pr.hotel ? "拆酒店 (退$"+hcost+")" : (pr.houses>=4 ? "起酒店 ($"+hcost+")" : canBuild ? "起屋 ("+(pr.houses+1)+"屋, $"+hcost+")" : "此類不能起屋");
+
+  let rentLabel;
+  if(p.type==="station"){
+    const cnt = Object.entries(state.props).filter(([id,pr2])=>pr2.owner===owner.id && BOARD[id].type==="station").length;
+    rentLabel = "收租 $"+rent+"（持"+cnt+"站）";
+  } else if(p.type==="utility"){
+    const utilCount = Object.entries(state.props).filter(([id,pr2])=>pr2.owner===owner.id && BOARD[id].type==="utility").length;
+    rentLabel = "收租（擲點×"+(utilCount>=2?10:4)+"）";
+  } else {
+    rentLabel = "收租 $"+rent;
+  }
+
+  showModal(p.cn+" — "+owner.name+" 擁有",
+    '<div style="display:flex;gap:8px;margin-bottom:10px">'+
+      (canBuild ? '<div style="flex:1;background:var(--card2);padding:12px;border-radius:8px;text-align:center;cursor:pointer" onclick="doToggleHouse('+pid+')">'+
+        '<div style="font-size:24px">🏗</div><div style="font-size:12px;font-weight:600;margin-top:4px">'+houseLabel+'</div></div>' : '')+
+      '<div style="flex:1;background:var(--card2);padding:12px;border-radius:8px;text-align:center;cursor:pointer" onclick="doRent('+pid+')">'+
+        '<div style="font-size:24px">💰</div><div style="font-size:12px;font-weight:600;margin-top:4px">'+rentLabel+'</div></div>'+
+    '</div>',
+    ()=>{}
+  );
+  document.getElementById("modalOk").style.display = "none";
+}
+
+function doToggleHouse(pid){
+  closeModal(); toggleHouse(pid);
+}
+
+function doRent(pid){
+  closeModal();
+  const p = BOARD[pid];
+  const pr = state.props[pid];
+  const owner = getPlayer(pr.owner);
+  pickPlayer("邊位交租畀 "+owner.name+"？（"+p.cn+"）", (tenantId)=>{
+    let amt;
+    if(p.type==="utility"){
+      const utilCount = Object.entries(state.props).filter(([id,pr2])=>pr2.owner===owner.id && BOARD[id].type==="utility").length;
+      const mult = utilCount>=2 ? 10 : 4;
+      const dice = prompt(p.cn+" — 擲咗幾點？（租金=點數×"+mult+"）");
+      if(dice===null) return;
+      amt = parseInt(dice)*mult;
+    } else {
+      const suggested = calcRent(pid);
+      const input = prompt("租金金額？（建議 $"+suggested+"）", suggested);
+      if(input===null) return;
+      amt = parseFloat(input)||0;
+    }
+    if(amt===0) return;
+    const tenant = getPlayer(tenantId);
+    tenant.balance -= amt;
+    owner.balance += amt;
+    logTxn(tenantId, -amt, "rent", p.cn+" 租金畀 "+owner.name);
+    logTxn(pr.owner, amt, "rent", "收租 from "+tenant.name+" ("+p.cn+")");
+    save(); render();
+  });
+}
+
 function buyProperty(pid){
   const p = BOARD[pid];
-  if(state.props[pid].owner){ alert("已有人擁有"); return; }
-  if(state.players.length===0){ alert("先加入玩家"); return; }
-  const buyer = state.players[0];
-  const doIt = confirm(buyer.name + " 買 " + p.cn + "（" + p.name + "）？\n$" + p.price);
-  if(!doIt) return;
-  buyer.balance -= p.price;
-  state.props[pid].owner = buyer.id;
-  state.ledger.push({
-    time: new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),
-    playerId: buyer.id, playerName: buyer.name, type:"buy",
-    amount: -p.price, note:"買 " + p.cn
+  pickPlayer("邊個買 "+p.cn+"？", (buyerId)=>{
+    const buyer = getPlayer(buyerId);
+    if(!confirm(buyer.name + " 買 " + p.cn + " $" + p.price + "？\n餘額：$" + buyer.balance)) return;
+    buyer.balance -= p.price;
+    state.props[pid].owner = buyer.id;
+    logTxn(buyer.id, -p.price, "buy", "買 "+p.cn);
+    save(); render();
   });
-  save(); render();
 }
 
 function toggleHouse(pid){
   const pr = state.props[pid];
   if(!pr.owner) return;
-  const owner = getPlayer(pr.owner);
   const p = BOARD[pid];
+  if(p.type!=="prop"){ alert("此類物業不能起屋"); return; }
+  const owner = getPlayer(pr.owner);
   const hcost = Math.floor(p.price/2);
   if(pr.hotel){
     pr.hotel = false; pr.houses = 4;
-    state.ledger.push({time:new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),playerId:owner.id,playerName:owner.name,type:"house",amount:-hcost,note:"拆酒店 "+p.cn});
+    owner.balance += hcost;
+    logTxn(owner.id, hcost, "house", "拆酒店 "+p.cn+" (退回)");
   } else if(pr.houses===4){
     pr.hotel = true;
-    state.ledger.push({time:new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),playerId:owner.id,playerName:owner.name,type:"house",amount:-hcost,note:"起酒店 "+p.cn});
+    owner.balance -= hcost;
+    logTxn(owner.id, -hcost, "house", "起酒店 "+p.cn);
   } else {
     pr.houses++;
-    state.ledger.push({time:new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),playerId:owner.id,playerName:owner.name,type:"house",amount:-hcost,note:"起"+pr.houses+"屋 "+p.cn});
+    owner.balance -= hcost;
+    logTxn(owner.id, -hcost, "house", "起"+pr.houses+"屋 "+p.cn);
   }
-  owner.balance -= hcost;
   save(); render();
 }
 
-function exportJSON(){
-  const blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "monopoly-game.json";
-  a.click();
+// === Cloud Save / Load ===
+async function cloudSave(){
+  try{
+    const resp = await fetch("/api/save", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(state)
+    });
+    const r = await resp.json();
+    if(r.ok){
+      state.gameId = r.gameId;
+      save();
+      alert("✅ 已上傳！\n對戰編號：" + r.gameId + "\n寫入 " + r.count + " 筆流水");
+    } else {
+      alert("❌ 上傳失敗: " + (r.error||"未知"));
+    }
+  }catch(e){
+    alert("❌ 連接失敗: " + e.message);
+  }
 }
-function importJSON(ev){
-  const file = ev.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    try{
-      state = JSON.parse(e.target.result);
-      save(); render();
-    }catch(err){ alert("JSON 格式錯誤"); }
-  };
-  reader.readAsText(file);
+
+async function cloudLoad(){
+  try{
+    const resp = await fetch("/api/games");
+    const r = await resp.json();
+    if(!r.ok || !r.games || r.games.length===0){ alert("冇歷史對戰"); return; }
+    let html = '<select id="modalGame" style="margin-bottom:8px">';
+    r.games.forEach(g=>{
+      const p = g.state && g.state.players ? g.state.players.map(x=>x.name).join("/") : g.players;
+      html += '<option value="'+g.gameId+'">'+g.gameId+' — '+p+' ('+g.txns+'筆)</option>';
+    });
+    html += '</select>';
+    showModal("☁️ 揀對戰匯入", html, async ()=>{
+      const gid = document.getElementById("modalGame").value;
+      if(!confirm("載入 "+gid+"？")) return;
+      const resp2 = await fetch("/api/load?gid="+gid);
+      const r2 = await resp2.json();
+      if(r2.ok && r2.data){
+        state = Object.assign(state, r2.data.state);
+        state.gameId = r2.data.gameId;
+        state.started = true;
+        save(); render();
+        alert("✅ 已載入 "+gid);
+      } else alert("匯入失敗");
+    });
+  }catch(e){ alert("❌ "+e.message); }
 }
+
+function deleteLedger(idx){
+  if(!confirm("確定刪除呢筆交易？")) return;
+  state.ledger.splice(idx, 1);
+  save(); render();
+}
+
 function resetGame(){
   if(!confirm("確定重開？所有記錄會清除")) return;
   localStorage.removeItem("j15monopoly");
   location.reload();
+}
+
+function showModal(title, bodyHtml, onOk){
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalBody").innerHTML = bodyHtml;
+  document.getElementById("modalOk").style.display = "block";
+  document.getElementById("modal").classList.add("show");
+  window._modalCb = onOk;
+}
+function closeModal(){ document.getElementById("modal").classList.remove("show"); }
+function modalConfirm(){
+  const cb = window._modalCb;
+  window._modalCb = null;
+  if(cb) cb();
+  if(!window._modalCb) closeModal();
 }
 
 function switchTab(el){
@@ -352,19 +705,37 @@ function switchTab(el){
   document.getElementById("page-"+el.dataset.page).classList.add("active");
 }
 
+function typeLabel(t){
+  return {buy:"買地",rent:"收租",bank:"銀行",house:"建屋",tax:"稅項",go:"出發金",jail:"監獄",card:"機會/公益",free:"免費泊車"}[t]||t;
+}
+
 function render(){
   document.getElementById("ver").textContent = "v"+state.version;
+  document.getElementById("setupPanel").style.display = state.started ? "none" : "block";
 
   const grid = document.getElementById("playerGrid");
   if(state.players.length===0){
-    grid.innerHTML = '<div class="empty" style="grid-column:1/3">尚未加入玩家<br>輸入名稱開始遊戲</div>';
+    grid.innerHTML = '<div class="empty" style="grid-column:1/3">尚未加入玩家</div>';
   } else {
-    grid.innerHTML = state.players.map(p=>
-      '<div class="pcard" style="border-left-color:'+p.color+'">'+
+    grid.innerHTML = state.players.map(p=>{
+      let propValue = 0, houseValue = 0, propList = [];
+      Object.entries(state.props).forEach(([pid,pr])=>{
+        if(pr.owner===p.id){
+          const b = BOARD[pid];
+          propValue += b.price*MORTGAGE_RATIO;
+          if(pr.houses>0) houseValue += pr.houses * Math.floor(b.price/2);
+          if(pr.hotel) houseValue += Math.floor(b.price/2);
+          propList.push(b.cn);
+        }
+      });
+      const total = p.balance + propValue + houseValue;
+      return '<div class="pcard" style="border-left-color:'+p.color+'">'+
         '<div class="pname">'+p.name+'</div>'+
         '<div class="pbal '+(p.balance<0?'neg':'')+'">$'+p.balance.toLocaleString()+'</div>'+
-        '<div class="pprops">'+playerPropCount(p.id)+' 項物業</div>'+
-      '</div>').join("");
+        '<div style="font-size:12px;color:var(--green);font-weight:700;margin-top:2px">總資產 $'+total.toLocaleString()+'</div>'+
+        '<div class="pprops">🏠'+propList.length+' 項 · 地產$'+propValue.toLocaleString()+' + 屋$'+houseValue.toLocaleString()+'</div>'+
+      '</div>';
+    }).join("");
   }
 
   const sel = document.getElementById("txnPlayer");
@@ -372,31 +743,29 @@ function render(){
   const tsel = document.getElementById("txnTarget");
   tsel.innerHTML = state.players.map(p=>'<option value="'+p.id+'">'+p.name+'</option>').join("");
 
-  const recent = state.ledger.slice(-20).reverse();
-  document.getElementById("ledger").innerHTML = recent.length===0
-    ? '<div class="empty">未有交易記錄</div>'
-    : recent.map(l=>
-      '<div class="ledger-item">'+
-        '<div><div>'+l.playerName+(l.note?(' · '+l.note):'')+'</div><div class="lmeta">'+l.time+' · '+typeLabel(l.type)+'</div></div>'+
-        '<div class="lamt '+(l.amount>=0?'pos':'neg')+'">'+(l.amount>=0?'+':'')+'$'+Math.abs(l.amount).toLocaleString()+'</div>'+
-      '</div>').join("");
-
   const all = state.ledger.slice().reverse();
   document.getElementById("ledgerFull").innerHTML = all.length===0
     ? '<div class="empty">未有交易記錄</div>'
-    : all.map(l=>
-      '<div class="ledger-item">'+
-        '<div><div>'+l.playerName+(l.note?(' · '+l.note):'')+'</div><div class="lmeta">'+l.time+' · '+typeLabel(l.type)+'</div></div>'+
-        '<div class="lamt '+(l.amount>=0?'pos':'neg')+'">'+(l.amount>=0?'+':'')+'$'+Math.abs(l.amount).toLocaleString()+'</div>'+
-      '</div>').join("");
+    : all.map((l,ri)=>{
+      const idx = state.ledger.length-1-ri;
+      return '<div class="ledger-item">'+
+        '<div style="flex:1"><div>'+l.pname+(l.note?(' · '+l.note):'')+'</div><div class="lmeta">'+l.t+' · '+typeLabel(l.type)+'</div></div>'+
+        '<div class="lamt '+(l.amt>=0?'pos':'neg')+'">'+(l.amt>=0?'+':'')+'$'+Math.abs(l.amt).toLocaleString()+'</div>'+
+        '<div style="margin-left:8px;cursor:pointer;color:var(--red);font-size:16px" onclick="deleteLedger('+idx+')">✕</div>'+
+      '</div>';
+    }).join("");
 
   document.getElementById("propList").innerHTML = BOARD.map(p=>{
     if(p.type==="special"){
-      return '<div class="prop special"><div class="pname">'+p.cn+' '+p.name+'</div></div>';
+      let cls = "prop special";
+      if(p.action==="tax") cls += " tax";
+      if(p.action==="go") cls += " go";
+      if(p.action==="jail"||p.action==="gotojail") cls += " jail";
+      return '<div class="'+cls+'" onclick="propClick('+p.id+')"><div class="pname">'+p.cn+'</div>'+(p.price?'<div class="pprice">$'+p.price+'</div>':'')+'</div>';
     }
     const pr = state.props[p.id];
     const owner = pr.owner ? getPlayer(pr.owner) : null;
-    const colorBar = p.type==="station" ? "var(--border)" : p.type==="utility" ? "var(--border)" : (COLOR_HEX[p.color]||"var(--border)");
+    const colorBar = (COLOR_HEX[p.color]||"var(--border)");
     let houses = "";
     if(pr.hotel) houses = "🏨";
     else if(pr.houses>0) houses = "🏠".repeat(pr.houses);
@@ -407,15 +776,6 @@ function render(){
       (houses?'<div class="phouses">'+houses+'</div>':'')+
     '</div>';
   }).join("");
-}
-
-function typeLabel(t){
-  return {buy:"買地",rent:"收租",rentin:"收租",bank:"銀行",house:"建屋"}[t]||t;
-}
-
-function propClick(pid){
-  const pr = state.props[pid];
-  if(pr.owner){ toggleHouse(pid); } else { buyProperty(pid); }
 }
 
 load();
