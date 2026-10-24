@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>J15 兒童遊戲助手 — Monopoly 香港版</title>
+<style>
+:root{
+  --bg:#0f1115; --card:#1a1d24; --card2:#222630; --border:#2e3340;
+  --txt:#e8eaed; --dim:#8b90a0; --accent:#f0b429; --green:#22c55e; --red:#ef4444; --blue:#3b82f6;
+  --brown:#8b5a2b; --lightblue:#7dd3fc; --pink:#f472b6; --orange:#fb923c; --red2:#ef4444;
+  --yellow:#facc15; --green2:#4ade80; --darkgreen:#059669; --darkblue:#3b82f6;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;font-size:15px;padding-bottom:80px}
+.header{position:sticky;top:0;background:var(--bg);padding:12px 16px;border-bottom:1px solid var(--border);z-index:10;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:700}
+.header h1 span{color:var(--accent)}
+.header .ver{font-size:11px;color:var(--dim)}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:20;max-width:720px;margin:0 auto}
+.tab{flex:1;text-align:center;padding:10px 4px;cursor:pointer;color:var(--dim);font-size:12px;transition:.2s}
+.tab.active{color:var(--accent)}
+.tab .ico{font-size:20px;display:block;margin-bottom:2px}
+.page{display:none;padding:12px;max-width:720px;margin:0 auto}
+.page.active{display:block}
+
+.player-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.pcard{background:var(--card);border-radius:12px;padding:12px;border-left:4px solid var(--accent)}
+.pcard .pname{font-size:14px;font-weight:600;margin-bottom:4px}
+.pcard .pbal{font-size:22px;font-weight:700;color:var(--accent)}
+.pcard .pbal.neg{color:var(--red)}
+.pcard .pprops{font-size:11px;color:var(--dim);margin-top:4px}
+
+.add-player{background:var(--card);border-radius:12px;padding:12px;display:flex;gap:8px;margin-bottom:16px}
+.add-player input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--txt);font-size:14px}
+.add-player button{background:var(--accent);color:#000;border:none;border-radius:8px;padding:10px 16px;font-weight:600;cursor:pointer}
+
+.txn-form{background:var(--card);border-radius:12px;padding:14px;margin-bottom:16px}
+.txn-form h3{font-size:14px;margin-bottom:10px;color:var(--accent)}
+.txn-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.txn-row label{font-size:12px;color:var(--dim);width:60px;flex-shrink:0}
+.txn-row select,.txn-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--txt);font-size:14px}
+.txn-row input[type=number]{text-align:right}
+.txn-submit{width:100%;background:var(--green);color:#000;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px}
+.txn-type-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.ttype{flex:1;min-width:70px;text-align:center;padding:8px 4px;border-radius:8px;background:var(--card2);cursor:pointer;font-size:12px;border:2px solid transparent}
+.ttype.active{border-color:var(--accent);background:rgba(240,180,41,.15)}
+
+.prop-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.prop{background:var(--card);border-radius:10px;padding:10px;border-top:4px solid var(--border);position:relative}
+.prop .pname{font-size:13px;font-weight:600}
+.prop .pprice{font-size:11px;color:var(--dim)}
+.prop .powner{font-size:11px;margin-top:4px;font-weight:600}
+.prop .phouses{font-size:12px;margin-top:2px}
+.prop.noprop{opacity:.4}
+.prop.station{border-top-color:#9ca3af}
+.prop.utility{border-top-color:#a78bfa}
+.prop.special{border-top-color:#6b7280;text-align:center}
+.prop.special .pname{font-size:12px;color:var(--dim)}
+
+.ledger{background:var(--card);border-radius:12px;padding:4px 0}
+.ledger-item{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.ledger-item:last-child{border-bottom:none}
+.ledger-item .lmeta{font-size:11px;color:var(--dim)}
+.ledger-item .lamt{font-weight:700;white-space:nowrap}
+.lamt.pos{color:var(--green)}
+.lamt.neg{color:var(--red)}
+
+.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.toolbar button{background:var(--card2);border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer}
+.toolbar button.danger{border-color:var(--red);color:var(--red)}
+
+.section-title{font-size:13px;color:var(--dim);margin:16px 0 8px;text-transform:uppercase;letter-spacing:1px}
+.empty{text-align:center;color:var(--dim);padding:30px;font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>J15 <span>Monopoly HK</span></h1>
+  <div>
+    <span class="ver" id="ver">v1.00</span>
+  </div>
+</div>
+
+<div class="page active" id="page-players">
+  <div class="toolbar">
+    <button onclick="exportJSON()">📤 匯出 JSON</button>
+    <button onclick="document.getElementById('importFile').click()">📥 匯入 JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    <button class="danger" onclick="resetGame()">🗑 重開</button>
+  </div>
+
+  <div class="add-player">
+    <input type="text" id="newPlayerName" placeholder="玩家名稱（如：Cici）" maxlength="12">
+    <button onclick="addPlayer()">+ 加入</button>
+  </div>
+
+  <div class="player-grid" id="playerGrid"></div>
+
+  <div class="txn-form">
+    <h3>💰 記一筆交易</h3>
+    <div class="txn-type-row" id="txnTypes">
+      <div class="ttype active" data-type="buy" onclick="setTxnType(this)">🛒 買地</div>
+      <div class="ttype" data-type="rent" onclick="setTxnType(this)">🏠 收租</div>
+      <div class="ttype" data-type="bank" onclick="setTxnType(this)">🏦 銀行</div>
+      <div class="ttype" data-type="house" onclick="setTxnType(this)">🏗 建屋</div>
+    </div>
+    <div class="txn-row">
+      <label>玩家</label>
+      <select id="txnPlayer"></select>
+    </div>
+    <div class="txn-row" id="txnTargetRow" style="display:none">
+      <label>對手</label>
+      <select id="txnTarget"></select>
+    </div>
+    <div class="txn-row">
+      <label>金額</label>
+      <input type="number" id="txnAmount" placeholder="0" value="0">
+    </div>
+    <div class="txn-row">
+      <label>備註</label>
+      <input type="text" id="txnNote" placeholder="例如：買灣仔 / 過關收$200" maxlength="40">
+    </div>
+    <button class="txn-submit" onclick="addTransaction()">確認入帳</button>
+  </div>
+
+  <div class="section-title">📋 流水帳</div>
+  <div class="ledger" id="ledger"></div>
+</div>
+
+<div class="page" id="page-props">
+  <div class="section-title">香港地產（點擊快速買/建屋）</div>
+  <div id="propList"></div>
+</div>
+
+<div class="page" id="page-ledger">
+  <div class="section-title">完整交易記錄</div>
+  <div class="ledger" id="ledgerFull"></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-page="players" onclick="switchTab(this)"><span class="ico">👥</span>玩家</div>
+  <div class="tab" data-page="props" onclick="switchTab(this)"><span class="ico">🗺️</span>地產</div>
+  <div class="tab" data-page="ledger" onclick="switchTab(this)"><span class="ico">📜</span>帳本</div>
+</div>
+
+<script>
+const BOARD = [
+  {id:0, name:"GO", cn:"出發", type:"special", price:0},
+  {id:1, name:"Wan Chai", cn:"灣仔", type:"prop", price:60, color:"brown"},
+  {id:2, name:"Community Chest", cn:"公益福利", type:"special", price:0},
+  {id:3, name:"Mong Kok", cn:"旺角", type:"prop", price:60, color:"brown"},
+  {id:4, name:"Income Tax", cn:"入息稅", type:"special", price:200},
+  {id:5, name:"Tung Chung Station", cn:"東涌站", type:"station", price:200},
+  {id:6, name:"Tsuen Wan", cn:"荃灣", type:"prop", price:100, color:"lightblue"},
+  {id:7, name:"Chance", cn:"機會", type:"special", price:0},
+  {id:8, name:"Yuen Long", cn:"元朗", type:"prop", price:100, color:"lightblue"},
+  {id:9, name:"Cheung Chau", cn:"長洲", type:"prop", price:120, color:"lightblue"},
+  {id:10, name:"Jail", cn:"監獄", type:"special", price:0},
+  {id:11, name:"Sai Kung", cn:"西貢", type:"prop", price:140, color:"pink"},
+  {id:12, name:"HK Electric", cn:"電燈公司", type:"utility", price:150},
+  {id:13, name:"Lamma Island", cn:"南丫島", type:"prop", price:140, color:"pink"},
+  {id:14, name:"Discovery Bay", cn:"愉景灣", type:"prop", price:160, color:"pink"},
+  {id:15, name:"Kowloon Station", cn:"九龍站", type:"station", price:200},
+  {id:16, name:"Blue Pool Road", cn:"藍塘道", type:"prop", price:180, color:"orange"},
+  {id:17, name:"Community Chest", cn:"公益福利", type:"special", price:0},
+  {id:18, name:"Wong Nai Chung Road", cn:"黃泥涌道", type:"prop", price:180, color:"orange"},
+  {id:19, name:"Village Road", cn:"村道", type:"prop", price:200, color:"orange"},
+  {id:20, name:"Free Parking", cn:"免費泊車", type:"special", price:0},
+  {id:21, name:"Chatham Road", cn:"漆咸道", type:"prop", price:220, color:"red2"},
+  {id:22, name:"Chance", cn:"機會", type:"special", price:0},
+  {id:23, name:"Mody Road", cn:"麼地道", type:"prop", price:220, color:"red2"},
+  {id:24, name:"Aberdeen", cn:"香港仔", type:"prop", price:240, color:"red2"},
+  {id:25, name:"Airport Station", cn:"機場站", type:"station", price:200},
+  {id:26, name:"Connaught Road", cn:"干諾道中", type:"prop", price:260, color:"yellow"},
+  {id:27, name:"Queen's Road", cn:"皇后大道中", type:"prop", price:260, color:"yellow"},
+  {id:28, name:"Water Works", cn:"水務局", type:"utility", price:150},
+  {id:29, name:"Des Voeux Road", cn:"德輔道中", type:"prop", price:280, color:"yellow"},
+  {id:30, name:"Go To Jail", cn:"進入監獄", type:"special", price:0},
+  {id:31, name:"HKCEC", cn:"會展", type:"prop", price:300, color:"green2"},
+  {id:32, name:"Pacific Place", cn:"太古廣場", type:"prop", price:300, color:"green2"},
+  {id:33, name:"Community Chest", cn:"公益福利", type:"special", price:0},
+  {id:34, name:"Exchange Square", cn:"交易廣場", type:"prop", price:320, color:"darkgreen"},
+  {id:35, name:"Hong Kong Station", cn:"香港站", type:"station", price:200},
+  {id:36, name:"Chance", cn:"機會", type:"special", price:0},
+  {id:37, name:"Repulse Bay", cn:"淺水灣", type:"prop", price:350, color:"darkblue"},
+  {id:38, name:"Luxury Tax", cn:"巨額稅款", type:"special", price:100},
+  {id:39, name:"The Peak", cn:"太平山", type:"prop", price:400, color:"darkblue"},
+];
+
+const COLOR_HEX = {
+  brown:"#8b5a2b", lightblue:"#7dd3fc", pink:"#f472b6", orange:"#fb923c",
+  red2:"#ef4444", yellow:"#facc15", green2:"#4ade80", darkgreen:"#059669", darkblue:"#3b82f6"
+};
+
+const PLAYER_COLORS = ["#ef4444","#3b82f6","#22c55e","#facc15","#a78bfa","#f472b6"];
+const START_MONEY = 1500;
+
+let state = {
+  version: "1.00",
+  lastUpdate: new Date().toISOString().slice(0,10),
+  startMoney: START_MONEY,
+  players: [],
+  props: {},
+  ledger: [],
+  nextPlayerId: 1,
+};
+
+BOARD.forEach(p => {
+  if(p.type==="prop"||p.type==="station"||p.type==="utility"){
+    state.props[p.id] = {owner:null, houses:0, hotel:false, mortgaged:false};
+  }
+});
+
+let currentTxnType = "buy";
+
+function load(){
+  const saved = localStorage.getItem("j15monopoly");
+  if(saved){
+    try{ state = JSON.parse(saved); }catch(e){ console.warn(e); }
+  }
+  render();
+}
+function save(){
+  localStorage.setItem("j15monopoly", JSON.stringify(state));
+}
+
+function addPlayer(){
+  const name = document.getElementById("newPlayerName").value.trim();
+  if(!name) return;
+  state.players.push({
+    id: "p"+state.nextPlayerId++,
+    name: name,
+    balance: START_MONEY,
+    color: PLAYER_COLORS[(state.players.length)%PLAYER_COLORS.length]
+  });
+  document.getElementById("newPlayerName").value = "";
+  save(); render();
+}
+
+function getPlayer(id){ return state.players.find(p=>p.id===id); }
+function playerPropCount(pid){
+  return Object.values(state.props).filter(pr=>pr.owner===pid).length;
+}
+
+function setTxnType(el){
+  document.querySelectorAll(".ttype").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  currentTxnType = el.dataset.type;
+  document.getElementById("txnTargetRow").style.display = (currentTxnType==="rent") ? "flex" : "none";
+}
+
+function addTransaction(){
+  const pid = document.getElementById("txnPlayer").value;
+  const amount = parseFloat(document.getElementById("txnAmount").value)||0;
+  const note = document.getElementById("txnNote").value.trim();
+  if(!pid || amount===0) return;
+  const player = getPlayer(pid);
+  let signedAmt = amount;
+
+  if(currentTxnType==="buy" || currentTxnType==="house"){
+    signedAmt = -Math.abs(amount);
+  } else if(currentTxnType==="rent"){
+    const tid = document.getElementById("txnTarget").value;
+    const target = getPlayer(tid);
+    signedAmt = -Math.abs(amount);
+    target.balance += Math.abs(amount);
+    state.ledger.push({
+      time: new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),
+      playerId: tid, playerName: target.name, type:"rent-in",
+      amount: Math.abs(amount), note: note||"收租"
+    });
+  }
+  player.balance += signedAmt;
+  state.ledger.push({
+    time: new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),
+    playerId: pid, playerName: player.name, type: currentTxnType,
+    amount: signedAmt, note: note
+  });
+  document.getElementById("txnAmount").value = "0";
+  document.getElementById("txnNote").value = "";
+  save(); render();
+}
+
+function buyProperty(pid){
+  const p = BOARD[pid];
+  if(state.props[pid].owner){ alert("已有人擁有"); return; }
+  if(state.players.length===0){ alert("先加入玩家"); return; }
+  const buyer = state.players[0];
+  const doIt = confirm(buyer.name + " 買 " + p.cn + "（" + p.name + "）？\n$" + p.price);
+  if(!doIt) return;
+  buyer.balance -= p.price;
+  state.props[pid].owner = buyer.id;
+  state.ledger.push({
+    time: new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),
+    playerId: buyer.id, playerName: buyer.name, type:"buy",
+    amount: -p.price, note:"買 " + p.cn
+  });
+  save(); render();
+}
+
+function toggleHouse(pid){
+  const pr = state.props[pid];
+  if(!pr.owner) return;
+  const owner = getPlayer(pr.owner);
+  const p = BOARD[pid];
+  const hcost = Math.floor(p.price/2);
+  if(pr.hotel){
+    pr.hotel = false; pr.houses = 4;
+    state.ledger.push({time:new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),playerId:owner.id,playerName:owner.name,type:"house",amount:-hcost,note:"拆酒店 "+p.cn});
+  } else if(pr.houses===4){
+    pr.hotel = true;
+    state.ledger.push({time:new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),playerId:owner.id,playerName:owner.name,type:"house",amount:-hcost,note:"起酒店 "+p.cn});
+  } else {
+    pr.houses++;
+    state.ledger.push({time:new Date().toLocaleTimeString("zh-HK",{hour:'2-digit',minute:'2-digit'}),playerId:owner.id,playerName:owner.name,type:"house",amount:-hcost,note:"起"+pr.houses+"屋 "+p.cn});
+  }
+  owner.balance -= hcost;
+  save(); render();
+}
+
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "monopoly-game.json";
+  a.click();
+}
+function importJSON(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      state = JSON.parse(e.target.result);
+      save(); render();
+    }catch(err){ alert("JSON 格式錯誤"); }
+  };
+  reader.readAsText(file);
+}
+function resetGame(){
+  if(!confirm("確定重開？所有記錄會清除")) return;
+  localStorage.removeItem("j15monopoly");
+  location.reload();
+}
+
+function switchTab(el){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("page-"+el.dataset.page).classList.add("active");
+}
+
+function render(){
+  document.getElementById("ver").textContent = "v"+state.version;
+
+  const grid = document.getElementById("playerGrid");
+  if(state.players.length===0){
+    grid.innerHTML = '<div class="empty" style="grid-column:1/3">尚未加入玩家<br>輸入名稱開始遊戲</div>';
+  } else {
+    grid.innerHTML = state.players.map(p=>
+      '<div class="pcard" style="border-left-color:'+p.color+'">'+
+        '<div class="pname">'+p.name+'</div>'+
+        '<div class="pbal '+(p.balance<0?'neg':'')+'">$'+p.balance.toLocaleString()+'</div>'+
+        '<div class="pprops">'+playerPropCount(p.id)+' 項物業</div>'+
+      '</div>').join("");
+  }
+
+  const sel = document.getElementById("txnPlayer");
+  sel.innerHTML = state.players.map(p=>'<option value="'+p.id+'">'+p.name+'</option>').join("");
+  const tsel = document.getElementById("txnTarget");
+  tsel.innerHTML = state.players.map(p=>'<option value="'+p.id+'">'+p.name+'</option>').join("");
+
+  const recent = state.ledger.slice(-20).reverse();
+  document.getElementById("ledger").innerHTML = recent.length===0
+    ? '<div class="empty">未有交易記錄</div>'
+    : recent.map(l=>
+      '<div class="ledger-item">'+
+        '<div><div>'+l.playerName+(l.note?(' · '+l.note):'')+'</div><div class="lmeta">'+l.time+' · '+typeLabel(l.type)+'</div></div>'+
+        '<div class="lamt '+(l.amount>=0?'pos':'neg')+'">'+(l.amount>=0?'+':'')+'$'+Math.abs(l.amount).toLocaleString()+'</div>'+
+      '</div>').join("");
+
+  const all = state.ledger.slice().reverse();
+  document.getElementById("ledgerFull").innerHTML = all.length===0
+    ? '<div class="empty">未有交易記錄</div>'
+    : all.map(l=>
+      '<div class="ledger-item">'+
+        '<div><div>'+l.playerName+(l.note?(' · '+l.note):'')+'</div><div class="lmeta">'+l.time+' · '+typeLabel(l.type)+'</div></div>'+
+        '<div class="lamt '+(l.amount>=0?'pos':'neg')+'">'+(l.amount>=0?'+':'')+'$'+Math.abs(l.amount).toLocaleString()+'</div>'+
+      '</div>').join("");
+
+  document.getElementById("propList").innerHTML = BOARD.map(p=>{
+    if(p.type==="special"){
+      return '<div class="prop special"><div class="pname">'+p.cn+' '+p.name+'</div></div>';
+    }
+    const pr = state.props[p.id];
+    const owner = pr.owner ? getPlayer(pr.owner) : null;
+    const colorBar = p.type==="station" ? "var(--border)" : p.type==="utility" ? "var(--border)" : (COLOR_HEX[p.color]||"var(--border)");
+    let houses = "";
+    if(pr.hotel) houses = "🏨";
+    else if(pr.houses>0) houses = "🏠".repeat(pr.houses);
+    return '<div class="prop '+p.type+'" style="border-top-color:'+colorBar+'" onclick="propClick('+p.id+')">'+
+      '<div class="pname">'+p.cn+' <span style="color:var(--dim);font-weight:400">'+p.name+'</span></div>'+
+      '<div class="pprice">$'+p.price.toLocaleString()+(p.type==='station'?' 🚆':p.type==='utility'?' 💡':'')+'</div>'+
+      (owner?'<div class="powner" style="color:'+owner.color+'">👤 '+owner.name+'</div>':'<div class="pprice">未售</div>')+
+      (houses?'<div class="phouses">'+houses+'</div>':'')+
+    '</div>';
+  }).join("");
+}
+
+function typeLabel(t){
+  return {buy:"買地",rent:"收租",rentin:"收租",bank:"銀行",house:"建屋"}[t]||t;
+}
+
+function propClick(pid){
+  const pr = state.props[pid];
+  if(pr.owner){ toggleHouse(pid); } else { buyProperty(pid); }
+}
+
+load();
+</script>
+</body>
+</html>
