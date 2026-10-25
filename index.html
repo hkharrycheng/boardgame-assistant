@@ -97,7 +97,7 @@ body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSys
 
 <div class="header">
   <h1>J15 <span>Monopoly HK</span></h1>
-  <span class="ver" id="ver">v1.21</span>
+  <span class="ver" id="ver">v1.22</span>
 </div>
 
 <div class="page active" id="page-players">
@@ -263,21 +263,32 @@ const CHANCE_CARDS = [
   {name:"房屋維修(每屋$250/酒店$1000)", amt:null},
 ];
 
-// Rent table: [0 houses, 1h, 2h, 3h, 4h, hotel]
-const RENT_TABLE = {
-  brown:    [2, 10, 30, 90, 160, 250],
-  lightblue:[6, 30, 90, 270, 400, 550],
-  pink:     [10, 50, 150, 450, 625, 750],
-  orange:   [14, 70, 200, 550, 750, 950],
-  red2:     [18, 90, 250, 700, 875, 1050],
-  yellow:   [22, 110, 330, 800, 975, 1150],
-  green2:   [26, 130, 390, 900, 1100, 1275],
-  darkblue: [35, 175, 500, 1100, 1300, 1500],
+// Rent data from Bitable Board Spaces (id: rent0,rent1,rent2,rent3,rent4,hotel, houseCost, mortgage, redeem)
+const RENT_DATA = {
+  1:{r0:2,r1:10,r2:30,r3:90,r4:160,h:250,hc:50,mort:30,red:33},
+  3:{r0:4,r1:20,r2:60,r3:180,r4:320,h:450,hc:50,mort:30,red:33},
+  6:{r0:6,r1:30,r2:90,r3:270,r4:400,h:550,hc:50,mort:50,red:55},
+  8:{r0:6,r1:30,r2:90,r3:270,r4:400,h:550,hc:50,mort:50,red:55},
+  9:{r0:8,r1:40,r2:100,r3:300,r4:450,h:600,hc:50,mort:60,red:66},
+  11:{r0:10,r1:50,r2:150,r3:450,r4:625,h:725,hc:100,mort:70,red:77},
+  13:{r0:10,r1:50,r2:150,r3:450,r4:625,h:725,hc:100,mort:70,red:77},
+  14:{r0:12,r1:60,r2:180,r3:500,r4:700,h:900,hc:100,mort:80,red:88},
+  16:{r0:14,r1:70,r2:200,r3:550,r4:750,h:950,hc:100,mort:90,red:99},
+  18:{r0:14,r1:70,r2:200,r3:550,r4:750,h:950,hc:100,mort:90,red:99},
+  19:{r0:16,r1:80,r2:220,r3:600,r4:800,h:1000,hc:100,mort:100,red:110},
+  21:{r0:18,r1:90,r2:250,r3:700,r4:875,h:1050,hc:150,mort:110,red:121},
+  23:{r0:18,r1:90,r2:250,r3:700,r4:875,h:1050,hc:150,mort:110,red:121},
+  24:{r0:20,r1:100,r2:300,r3:750,r4:925,h:1100,hc:150,mort:120,red:132},
+  26:{r0:22,r1:110,r2:330,r3:800,r4:975,h:1150,hc:150,mort:130,red:143},
+  27:{r0:22,r1:110,r2:330,r3:800,r4:975,h:1150,hc:150,mort:130,red:143},
+  29:{r0:24,r1:120,r2:360,r3:850,r4:1025,h:1200,hc:150,mort:140,red:154},
+  31:{r0:26,r1:130,r2:390,r3:900,r4:1100,h:1275,hc:200,mort:150,red:165},
+  32:{r0:26,r1:130,r2:390,r3:900,r4:1100,h:1275,hc:200,mort:150,red:165},
+  34:{r0:28,r1:150,r2:450,r3:1000,r4:1200,h:1400,hc:200,mort:160,red:176},
+  37:{r0:35,r1:175,r2:500,r3:1100,r4:1300,h:1500,hc:200,mort:175,red:193},
+  39:{r0:50,r1:200,r2:600,r3:1400,r4:1700,h:2000,hc:200,mort:200,red:200},
 };
-// Stations: rent by count owned
 const STATION_RENT = [0, 25, 50, 100, 200];
-const MORTGAGE_RATIO = 0.5;  // mortgage = price * 0.5
-const REDEEM_INTEREST = 1.1; // redeem = mortgage * 1.1
 const PRESET_PLAYERS = ["Harry","Dyna","Cici","Coco"];
 const PLAYER_COLORS = ["#ef4444","#3b82f6","#22c55e","#facc15","#a78bfa","#f472b6"];
 const START_MONEY = 1500;
@@ -508,19 +519,21 @@ function calcRent(pid){
   const p = BOARD[pid];
   const pr = state.props[pid];
   if(p.type==="station"){
-    const owner = getPlayer(pr.owner);
-    const cnt = Object.entries(state.props).filter(([id,pr2])=>pr2.owner===owner.id && BOARD[id].type==="station").length;
+    const cnt = Object.entries(state.props).filter(([id,pr2])=>pr2.owner===pr.owner && BOARD[id].type==="station").length;
     return STATION_RENT[Math.min(cnt,4)];
   }
-  if(p.type==="utility"){
-    return -1; // special: needs dice
-  }
-  const rents = RENT_TABLE[p.color] || [10];
-  let idx = pr.hotel ? 5 : pr.houses;
-  let rent = rents[idx] || rents[0];
-  // color set bonus: double base rent if all owned
-  if(idx===0 && countOwnedColorGroup(pid)===BOARD.filter(b=>b.color===p.color).length) rent *= 2;
-  return rent;
+  if(p.type==="utility"){ return -1; }
+  const rd = RENT_DATA[pid];
+  if(!rd) return 0;
+  if(pr.hotel) return rd.h;
+  if(pr.houses===4) return rd.r4;
+  if(pr.houses===3) return rd.r3;
+  if(pr.houses===2) return rd.r2;
+  if(pr.houses===1) return rd.r1;
+  // color set bonus: double base rent
+  const colorProps = BOARD.filter(b=>b.color===p.color);
+  const ownedColor = colorProps.filter(b=>state.props[b.id].owner===pr.owner).length;
+  return ownedColor===colorProps.length ? rd.r0*2 : rd.r0;
 }
 
 function showPropActions(pid){
@@ -606,19 +619,21 @@ function toggleHouse(pid){
   const p = BOARD[pid];
   if(p.type!=="prop"){ alert("此類物業不能起屋"); return; }
   const owner = getPlayer(pr.owner);
-  const hcost = Math.floor(p.price/2);
+  const rd = RENT_DATA[pid];
+  if(!rd) return;
+  const hcost = rd.hc;
   if(pr.hotel){
     pr.hotel = false; pr.houses = 4;
     owner.balance += hcost;
-    logTxn(owner.id, hcost, "house", "拆酒店 "+p.cn+" (退回)");
+    logTxn(owner.id, hcost, "house", "拆酒店 "+p.cn+" (退回$"+hcost+")");
   } else if(pr.houses===4){
     pr.hotel = true;
     owner.balance -= hcost;
-    logTxn(owner.id, -hcost, "house", "起酒店 "+p.cn);
+    logTxn(owner.id, -hcost, "house", "起酒店 "+p.cn+" ($"+hcost+")");
   } else {
     pr.houses++;
     owner.balance -= hcost;
-    logTxn(owner.id, -hcost, "house", "起"+pr.houses+"屋 "+p.cn);
+    logTxn(owner.id, -hcost, "house", "起"+pr.houses+"屋 "+p.cn+" ($"+hcost+")");
   }
   save(); render();
 }
@@ -725,9 +740,11 @@ function render(){
       Object.entries(state.props).forEach(([pid,pr])=>{
         if(pr.owner===p.id){
           const b = BOARD[pid];
-          propValue += b.price*MORTGAGE_RATIO;
-          if(pr.houses>0) houseValue += pr.houses * Math.floor(b.price/2);
-          if(pr.hotel) houseValue += Math.floor(b.price/2);
+          const rd = RENT_DATA[pid];
+          if(rd){
+            propValue += rd.mort;
+            houseValue += (pr.houses + (pr.hotel?1:0)) * rd.hc;
+          }
           propList.push(b.cn);
         }
       });
