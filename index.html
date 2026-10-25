@@ -624,7 +624,9 @@ function toggleHouse(pid){
 }
 
 // === Cloud Save / Load ===
+function isLocal(){ return location.hostname==="localhost"||location.hostname==="127.0.0.1"; }
 async function cloudSave(){
+  if(!isLocal()){ alert("☁️ 雲端功能只係 localhost 先用得\n請用本地 server.py 開啟"); return; }
   try{
     const resp = await fetch("/api/save", {
       method:"POST",
@@ -645,6 +647,7 @@ async function cloudSave(){
 }
 
 async function cloudLoad(){
+  if(!isLocal()){ alert("☁️ 雲端功能只係 localhost 先用得\n請用本地 server.py 開啟"); return; }
   try{
     const resp = await fetch("/api/games");
     const r = await resp.json();
